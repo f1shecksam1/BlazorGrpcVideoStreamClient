@@ -1,0 +1,35 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.SignalR.Client
+@using OpenCvSharp
+@inject NavigationManager NavManager
+@inject IJSRuntime JSRuntime
+
+<button @onclick="StartStream">Start Listening</button>
+<canvas id="videoCanvas"></canvas>
+<p>@greeting</p>
+
+@code{
+    private HubConnection? hubConnection;
+    string greeting="s";
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder().WithUrl(NavManager.ToAbsoluteUri("/grpcclienthub")).WithAutomaticReconnect().Build();
+        Console.WriteLine("Connected");
+        //await hubConnection.InvokeAsync("GetAndSendVideoData");
+        hubConnection.On<byte[]>("ReceiveVideoByte" , (laneBytes) => {
+            byte[] aframeData = laneBytes;
+            string base64Image = Convert.ToBase64String(aframeData);
+            JSRuntime.InvokeVoidAsync("showVideoFrame", base64Image);
+            greeting = "10";
+            });
+        await hubConnection.StartAsync();
+    }
+
+    private async Task StartStream()
+    {
+        if(hubConnection is not null)
+        {
+            await hubConnection.InvokeAsync("GetAndSendVideoData");
+        }
+    }
+}

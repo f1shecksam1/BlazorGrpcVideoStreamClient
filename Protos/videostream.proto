@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package avideoStream;
+
+service BvideoStreamP {
+
+    rpc RpcN(ServerActivity) returns (stream StreamFrame) {}
+
+}
+
+
+message ServerActivity {
+    bool isServerActive=1;
+}
+
+message StreamFrame {
+    bytes frameData = 1;
+}
